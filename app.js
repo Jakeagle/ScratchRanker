@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sourceObject.logo) img.src = sourceObject.logo;
         });
 
-        // Safe mapping of QR code
-        const qrImg = document.querySelector('.qr-img');
+        // Correctly mapped QR code selector to match new HTML class (Fixes missing QR)
+        const qrImg = document.querySelector('.qr-image-inline');
         if (qrImg && sourceObject.qrCode) qrImg.src = sourceObject.qrCode;
 
         // Safe mapping of Step Illustrations
@@ -200,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const conf = document.createElement('div');
             conf.className = 'confetti';
             conf.style.left = Math.random() * 100 + 'vw';
+            conf.style.top = '-150px';
             conf.style.animationDelay = Math.random() * 2 + 's';
             conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
             container.appendChild(conf);
@@ -269,7 +270,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="price-card ${p.pop ? 'popular' : ''} price-anim" style="animation-delay: ${delay}s">
                         ${p.pop ? '<div class="popular-badge">Best Value</div>' : ''}
                         <div class="price-label">${p.label}</div>
-                        <div class="price-val">${p.price} <span class="price-per">${p.per}</span></div>
+                        <div class="price-price-row">
+                            <div class="price-val">${p.price}</div>
+                            <div class="price-per">${p.per}</div>
+                        </div>
                         ${p.trial ? '<div class="price-trial">✦ 3 days free trial</div>' : ''}
                     </div>
                 `;
@@ -327,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
             prevBtn.addEventListener('click', () => {
                 clearInterval(autoPlay);
                 movePrev();
-                autoPlay = setInterval(() => moveNext(), 10000);
+                autoPlay = setInterval(() => moveNext(), 10000); 
             });
         }
     };
@@ -369,6 +373,77 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    /* --- 9. INFINITE 2-SECOND RADAR FEATURE HIGHLIGHT --- */
+    const initFeatureHighlightLoop = () => {
+        const items = document.querySelectorAll('.feature-item');
+        if (items.length === 0) return;
+        
+        let index = 0;
+        
+        setInterval(() => {
+            items.forEach(item => item.classList.remove('active-highlight'));
+            items[index].classList.add('active-highlight');
+            index = (index + 1) % items.length;
+        }, 2000);
+    };
+
+    /* --- 10. HIGH-END PARALLAX BACKGROUND DRIFT ENGINE (3D INTERACTION) --- */
+    const initBgParallax = () => {
+        const grid = document.querySelector('.bg-grid');
+        const blobs = document.querySelectorAll('.ambient-blob');
+        if (!grid && blobs.length === 0) return;
+
+        window.addEventListener('mousemove', (e) => {
+            // Calculate cursor offset percent relative to center of viewport
+            const x = (e.clientX / window.innerWidth - 0.5) * 40; // Max 40px shift
+            const y = (e.clientY / window.innerHeight - 0.5) * 40;
+
+            // Tilt and translate background coordinate grid
+            if (grid) {
+                grid.style.transform = `translate3d(${x * 0.4}px, ${y * 0.4}px, 0) rotateX(${-y * 0.05}deg) rotateY(${x * 0.05}deg)`;
+            }
+
+            // Move the soft neon ambient blobs independently at varied depth speeds (asynchronous parallax)
+            blobs.forEach((blob, idx) => {
+                const depthSpeed = (idx + 1) * 0.35;
+                blob.style.transform = `translate3d(${x * depthSpeed}px, ${y * depthSpeed}px, 0)`;
+            });
+        });
+    };
+
+    /* --- 11. DEPTH PARTICLE FIELD --- */
+const initDepthParticles = () => {
+    const count = 40;
+
+    for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'depth-particle';
+
+        const size = Math.random() * 4 + 1;
+
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.top = Math.random() * 100 + 'vh';
+        p.style.opacity = Math.random() * 0.4 + 0.1;
+
+        document.body.appendChild(p);
+
+        const duration = Math.random() * 40 + 30;
+
+        p.animate(
+            [
+                { transform: 'translateY(0px)' },
+                { transform: 'translateY(-200px)' }
+            ],
+            {
+                duration: duration * 1000,
+                iterations: Infinity
+            }
+        );
+    }
+};
+
     // --- INITIALIZE ALL ---
     loadImages();
     initTicketScratch();
@@ -376,5 +451,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initPricing();
     initCarousel();
     initScrollSync();
+    initFeatureHighlightLoop();
+    initBgParallax();
+    initDepthParticles(); // Fire the 3D environmental depth engine
 
 });
