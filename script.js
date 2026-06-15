@@ -162,12 +162,12 @@ function App() {
     return () => io.disconnect();
   }, []);
 
-  // Parallax Engine
+  // Parallax Engine (New)
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!currentMode.depth) return;
-      const x = (e.clientX / window.innerWidth - 0.5) * 40;
-      const y = (e.clientY / window.innerHeight - 0.5) * 40;
+      const x = (e.clientX / window.innerWidth - 0.5) * 30;
+      const y = (e.clientY / window.innerHeight - 0.5) * 30;
       
       const grid = document.querySelector('.bg-grid');
       if (grid) {
@@ -187,7 +187,7 @@ function App() {
     for (let i = 0; i < count; i++) {
       const p = document.createElement('div');
       p.className = 'depth-particle';
-      const size = Math.random() * 5 + 2;
+      const size = Math.random() * 4 + 2;
       p.style.background = 'var(--particle-color)';
       p.style.width = size + 'px';
       p.style.height = size + 'px';
@@ -202,7 +202,7 @@ function App() {
 
       p.animate([
         { transform: 'translateY(0px) scale(1)' },
-        { transform: `translateY(-${Math.random() * 400 + 200}px) scale(0.3)` }
+        { transform: `translateY(-${Math.random() * 300 + 200}px) scale(0.5)` }
       ], {
         duration: Math.random() * 15000 + 10000,
         iterations: Infinity,
@@ -216,16 +216,19 @@ function App() {
   return (
     <div id="app-root" data-theme={currentMode.theme} data-depth={currentMode.depth.toString()}>
       
+      {/* ── BACKGROUND SCENE ── */}
       <div className="background-scene-wrapper">
         <div className="bg-grid"></div>
         <div className="aurora"></div>
       </div>
 
+      {/* ── THEME SWITCHER ── */}
       <button className="theme-toggle" onClick={cycleMode}>
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: currentMode.theme === 'white' ? '#fff' : 'var(--purple-lt)' }}></div>
         {currentMode.name}
       </button>
 
+      {/* ── NAV ── */}
       <nav>
         <a className="nav-logo" href="#">
           <img src={images.logo} alt="Logo" />
@@ -239,6 +242,7 @@ function App() {
         <a href="#" className="btn-primary">Get the app</a>
       </nav>
 
+      {/* ── HERO ── */}
       <div id="hero">
         <div className="hero-left">
           <div className="reveal">
@@ -269,6 +273,7 @@ function App() {
         </div>
       </div>
 
+      {/* ── STATS BAR ── */}
       <div className="stats-bar">
         <div className="stats-inner reveal">
           {[
@@ -285,6 +290,7 @@ function App() {
         </div>
       </div>
 
+      {/* ── HOW IT WORKS ── */}
       <section id="how">
         <div className="eyebrow reveal">How it works</div>
         <h2 className="how-headline reveal reveal-delay-1">From "which one looks lucky" to "I know exactly what to buy" in a few taps.</h2>
@@ -320,6 +326,7 @@ function App() {
         </div>
       </section>
 
+      {/* ── FEATURES ── */}
       <section id="features" style={{ padding: '64px 48px 140px' }}>
         <div className="eyebrow reveal">The Edge</div>
         <h2 className="reveal reveal-delay-1" style={{fontSize:'clamp(28px,4vw,40px)',fontWeight:900,letterSpacing:'-.02em',maxWidth:540,lineHeight:1.15}}>The data the lottery<br/>doesn't put on the ticket.</h2>
@@ -346,6 +353,7 @@ function App() {
         </div>
       </section>
 
+      {/* ── PRICING ── */}
       <section id="pricing">
         <div className="eyebrow reveal">Pricing</div>
         <h2 className="reveal reveal-delay-1" style={{fontSize:'clamp(28px,4vw,40px)',fontWeight:900,letterSpacing:'-.02em',marginBottom:8}}>Less than a single ticket.</h2>
@@ -373,6 +381,7 @@ function App() {
         </div>
       </section>
 
+      {/* ── FINAL CTA ── */}
       <div id="cta-section">
         <div className="cta-inner reveal">
           <div className="cta-left">
