@@ -2,13 +2,6 @@ const { useState, useEffect, useRef } = React;
 
 /* ── 1. CONFIGURATION & DATA ── */
 
-const MODES = [
-  { name: "Purple Flat",  theme: "purple", depth: false },
-  { name: "Purple Depth", theme: "purple", depth: true  },
-  { name: "White Flat",   theme: "white",  depth: false },
-  { name: "White Depth",  theme: "white",  depth: true  }
-];
-
 const STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
   'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
@@ -27,6 +20,13 @@ const PLANS = {
     { period: 'Annual',  price: '$49.99',unit: '/yr',   features: ['Up to 5 states','All ranked games','Daily data refresh','3-day free trial','Save 54%'] },
   ]
 };
+
+const TESTIMONIALS = [
+  { name: "Marcus T.", location: "Houston, TX", rating: 5, text: "I used to grab whatever looked shiny. Now I check ScratchRanker first. Hit a $500 winner last week on a game I'd never have picked." },
+  { name: "Dana R.", location: "Tampa, FL", rating: 5, text: "Genuinely surprised at how much top-prize data is hidden from players. This app just shows it. No guesswork." },
+  { name: "Eli K.", location: "Newark, NJ", rating: 5, text: "Worth it for the multi-state plan alone. I cross the border for work and this saves me real money." },
+  { name: "Priya S.", location: "Phoenix, AZ", rating: 5, text: "Updated daily, clean interface, no ads. Best $2.99 I spend each week." }
+];
 
 /* ── 2. SUB-COMPONENTS ── */
 
@@ -102,7 +102,6 @@ const BestTicketCard = () => (
       width: '210px', 
       background: '#fff', 
       borderRadius: '16px', 
-      border: '1px solid #E2DAFD', 
       boxShadow: '0 10px 25px rgba(124,58,237,0.12)', 
       overflow: 'hidden',
       fontFamily: "'Inter', sans-serif"
@@ -143,14 +142,96 @@ const BestTicketCard = () => (
   </div>
 );
 
-/* ── 3. MAIN APP COMPONENT ── */
+/* ── 3. TESTIMONIAL CAROUSEL COMPONENT ── */
+
+const TestimonialCarousel = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const totalPages = Math.ceil(TESTIMONIALS.length / 2);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % totalPages);
+    }, 10000); // 10 seconds
+    return () => clearInterval(timer);
+  }, [totalPages]);
+
+  return (
+    <div style={{ overflow: 'hidden', width: '100%', position: 'relative', padding: '10px 0' }}>
+      <div 
+        style={{ 
+          display: 'flex', 
+          transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)', 
+          transform: `translateX(-${currentIndex * 100}%)` 
+        }}
+      >
+        {Array.from({ length: totalPages }).map((_, pageIdx) => (
+          <div 
+            key={pageIdx} 
+            style={{ 
+              display: 'grid', 
+              gridTemplateColumns: '1fr 1fr', 
+              gap: '24px', 
+              minWidth: '100%', 
+              boxSizing: 'border-box',
+              padding: '0 5px'
+            }}
+          >
+            {TESTIMONIALS.slice(pageIdx * 2, pageIdx * 2 + 2).map((t, i) => (
+              <div 
+                key={i} 
+                className="testimonial-card"
+                style={{ 
+                  background: 'var(--card)', 
+                  padding: '24px', 
+                  borderRadius: '16px', 
+                  border: '1px solid var(--border)', 
+                  boxShadow: 'var(--shadow-sm)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  height: '100%'
+                }}
+              >
+                <div>
+                  <div style={{ color: '#F59E0B', marginBottom: '12px', fontSize: '14px' }}>{'★'.repeat(t.rating)}</div>
+                  <p style={{ fontSize: '14px', color: 'var(--sub)', lineHeight: 1.6, marginBottom: '16px' }}>"{t.text}"</p>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 700 }}>{t.name}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--sub)' }}>{t.location}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      
+      {/* Carousel Indicators (Dots) */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '32px' }}>
+        {Array.from({ length: totalPages }).map((_, i) => (
+          <div 
+            key={i} 
+            onClick={() => setCurrentIndex(i)}
+            style={{ 
+              width: i === currentIndex ? '24px' : '8px', 
+              height: '8px', 
+              borderRadius: '999px', 
+              background: i === currentIndex ? 'var(--purple)' : 'var(--border)',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }} 
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ── 4. MAIN APP COMPONENT ── */
 
 function App() {
-  const [currentModeIdx, setCurrentModeIdx] = useState(0);
   const [planType, setPlanType] = useState('single');
   const images = window.__IMAGES__ || {};
-
-  const currentMode = MODES[currentModeIdx];
 
   // Reveal Logic
   useEffect(() => {
@@ -162,71 +243,14 @@ function App() {
     return () => io.disconnect();
   }, []);
 
-  // Parallax Engine (New)
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!currentMode.depth) return;
-      const x = (e.clientX / window.innerWidth - 0.5) * 30;
-      const y = (e.clientY / window.innerHeight - 0.5) * 30;
-      
-      const grid = document.querySelector('.bg-grid');
-      if (grid) {
-        grid.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-      }
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [currentModeIdx]);
-
-  // Floating Particles
-  useEffect(() => {
-    document.querySelectorAll('.depth-particle').forEach(p => p.remove());
-    if (!currentMode.depth) return;
-
-    const count = 30;
-    for (let i = 0; i < count; i++) {
-      const p = document.createElement('div');
-      p.className = 'depth-particle';
-      const size = Math.random() * 4 + 2;
-      p.style.background = 'var(--particle-color)';
-      p.style.width = size + 'px';
-      p.style.height = size + 'px';
-      p.style.left = Math.random() * 100 + 'vw';
-      p.style.top = Math.random() * 100 + 'vh';
-      p.style.opacity = Math.random() * 0.3;
-      p.style.position = 'fixed';
-      p.style.zIndex = '-1';
-      p.style.borderRadius = '50%';
-      p.style.pointerEvents = 'none';
-      document.body.appendChild(p);
-
-      p.animate([
-        { transform: 'translateY(0px) scale(1)' },
-        { transform: `translateY(-${Math.random() * 300 + 200}px) scale(0.5)` }
-      ], {
-        duration: Math.random() * 15000 + 10000,
-        iterations: Infinity,
-        easing: 'ease-in-out'
-      });
-    }
-  }, [currentModeIdx]);
-
-  const cycleMode = () => setCurrentModeIdx((prev) => (prev + 1) % MODES.length);
-
   return (
-    <div id="app-root" data-theme={currentMode.theme} data-depth={currentMode.depth.toString()}>
+    <div id="app-root" data-theme="purple" data-depth="false">
       
       {/* ── BACKGROUND SCENE ── */}
       <div className="background-scene-wrapper">
         <div className="bg-grid"></div>
         <div className="aurora"></div>
       </div>
-
-      {/* ── THEME SWITCHER ── */}
-      <button className="theme-toggle" onClick={cycleMode}>
-        <div style={{ width: 8, height: 8, borderRadius: '50%', background: currentMode.theme === 'white' ? '#fff' : 'var(--purple-lt)' }}></div>
-        {currentMode.name}
-      </button>
 
       {/* ── NAV ── */}
       <nav>
@@ -239,7 +263,6 @@ function App() {
           <li><a href="#features">Features</a></li>
           <li><a href="#pricing">Pricing</a></li>
         </ul>
-        <a href="#" className="btn-primary">Get the app</a>
       </nav>
 
       {/* ── HERO ── */}
@@ -250,7 +273,7 @@ function App() {
           </div>
           <p className="hero-sub reveal reveal-delay-1">Browse every scratch-off game across 32 states. Sort by real odds, remaining prizes, and ticket price — so you know exactly what to buy before you spend a dollar.</p>
           <div className="hero-cta-row reveal reveal-delay-2">
-            <a href="#" className="appstore-btn">
+            <a href="https://apps.apple.com/us/app/scratchranker/id6753612311" className="appstore-btn" target="_blank" rel="noopener noreferrer">
               <AppleIcon />
               <div className="appstore-text"><small>Download on the</small><strong>App Store</strong></div>
             </a>
@@ -264,12 +287,10 @@ function App() {
           <p className="hero-trial reveal reveal-delay-3">Free for 3 days · $2.99/wk after · Cancel anytime</p>
         </div>
 
-        <div className="hero-right reveal reveal-delay-2">
-          <div className="phone-depth">
-            <div className="phone-shadow-layer" />
-            <div className="phone-back-layer" />
-            <img src={images.screenGames} alt="App" className="phone-img" />
-          </div>
+        {/* Hero Screens (with robust phone borders applied) */}
+        <div className="hero-right reveal reveal-delay-2" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '16px', width: '100%' }}>
+          <img src={images.screenGames} alt="Games Screen" style={{ width: '45%', borderRadius: '24px', boxShadow: 'var(--shadow-lg)', border: '6px solid #0D0B1E' }} />
+          <img src={images.screenFilter} alt="Filter Screen" style={{ width: '45%', borderRadius: '24px', boxShadow: 'var(--shadow-lg)', border: '6px solid #0D0B1E' }} />
         </div>
       </div>
 
@@ -293,41 +314,55 @@ function App() {
       {/* ── HOW IT WORKS ── */}
       <section id="how">
         <div className="eyebrow reveal">How it works</div>
-        <h2 className="how-headline reveal reveal-delay-1">From "which one looks lucky" to "I know exactly what to buy" in a few taps.</h2>
+        <h2 className="how-headline reveal reveal-delay-1">
+          From "which ones look lucky"<br/>
+          to "I know exactly what to buy"<br/>
+          in a few taps.
+        </h2>
         <div className="steps-grid">
           <div className="step-card reveal">
-            <div className="step-num">1</div>
-            <div className="step-title">Pick your state</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="step-num">1</div>
+              <div className="step-title">Pick your state</div>
+            </div>
             <div className="step-body">Choose from 32 US states. Multi-state plans cover up to 5.</div>
             <div className="step-visual"><StateCarousel /></div>
           </div>
           <div className="step-card reveal reveal-delay-1">
-            <div className="step-num">2</div>
-            <div className="step-title">Browse the ranked list</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="step-num">2</div>
+              <div className="step-title">Browse the ranked list</div>
+            </div>
             <div className="step-body">Games scored by remaining prizes, odds, and value.</div>
-            <div className="step-visual" style={{ background: 'transparent', alignItems: 'flex-start' }}>
-              <img src={images.screenGames} alt="List" style={{ width: '72%', marginTop: '20px', borderRadius: '16px 16px 0 0', border: '1px solid var(--border)', borderBottom: 'none' }} />
+            {/* Screen with robust phone border applied */}
+            <div className="step-visual" style={{ background: 'transparent', border: 'none', alignItems: 'flex-start' }}>
+              <img src={images.screenGames} alt="List" style={{ width: '80%', marginTop: '10px', borderRadius: '16px', boxShadow: 'var(--shadow-sm)', border: '5px solid #0D0B1E' }} />
             </div>
           </div>
           <div className="step-card reveal reveal-delay-2">
-            <div className="step-num">3</div>
-            <div className="step-title">Sort and filter to taste</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="step-num">3</div>
+              <div className="step-title">Sort and filter to taste</div>
+            </div>
             <div className="step-body">Narrow by ticket price, prize amount, or probability.</div>
-            <div className="step-visual" style={{ background: 'transparent', alignItems: 'flex-start' }}>
-              <img src={images.screenFilter} alt="Filters" style={{ width: '72%', marginTop: '20px', borderRadius: '16px 16px 0 0', border: '1px solid var(--border)', borderBottom: 'none' }} />
+            {/* Screen with robust phone border applied */}
+            <div className="step-visual" style={{ background: 'transparent', border: 'none', alignItems: 'flex-start' }}>
+              <img src={images.screenFilter} alt="Filters" style={{ width: '80%', marginTop: '10px', borderRadius: '16px', boxShadow: 'var(--shadow-sm)', border: '5px solid #0D0B1E' }} />
             </div>
           </div>
           <div className="step-card reveal reveal-delay-3">
-            <div className="step-num">4</div>
-            <div className="step-title">Buy smarter at the counter</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="step-num">4</div>
+              <div className="step-title">Buy smarter at the counter</div>
+            </div>
             <div className="step-body">Walk in knowing which tickets still have the most prizes left.</div>
-            <div className="step-visual" style={{ background: 'transparent' }}><BestTicketCard /></div>
+            <div className="step-visual" style={{ background: 'transparent', border: 'none' }}><BestTicketCard /></div>
           </div>
         </div>
       </section>
 
-      {/* ── FEATURES ── */}
-      <section id="features" style={{ padding: '64px 48px 140px' }}>
+      {/* ── FEATURES ("THE EDGE") ── */}
+      <section id="features" style={{ padding: '64px 48px' }}>
         <div className="eyebrow reveal">The Edge</div>
         <h2 className="reveal reveal-delay-1" style={{fontSize:'clamp(28px,4vw,40px)',fontWeight:900,letterSpacing:'-.02em',maxWidth:540,lineHeight:1.15}}>The data the lottery<br/>doesn't put on the ticket.</h2>
         <div className="features-grid">
@@ -343,41 +378,59 @@ function App() {
               </div>
             ))}
           </div>
-          <div className="features-right reveal reveal-delay-2" style={{ position: 'relative', top: 0 }}>
-            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-              <div className="feature-phone-bg" />
-              <img src={images.screenPrizes} className="feature-phone" alt="Screen 1" style={{ width: '64%', position: 'absolute', top: '-200px', left: 0, zIndex: 2 }} />
-              <img src={images.screenPrizesSort} className="feature-phone" alt="Screen 2" style={{ width: '64%', position: 'absolute', top: '-80px', right: 0, zIndex: 1, opacity: 0.9 }} />
-            </div>
+          <div className="features-right reveal reveal-delay-2" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '16px', height: '100%', position: 'relative' }}>
+            <div className="feature-phone-bg" style={{ inset: '10%' }} />
+            {/* Screens with borders applied */}
+            <img src={images.screenPrizes} className="feature-phone" alt="Screen 1" style={{ width: '45%', zIndex: 2, transform: 'translateY(-20px)', border: '6px solid #0D0B1E' }} />
+            <img src={images.screenPrizesSort} className="feature-phone" alt="Screen 2" style={{ width: '45%', zIndex: 1, opacity: 0.95, transform: 'translateY(20px)', border: '6px solid #0D0B1E' }} />
           </div>
         </div>
       </section>
 
       {/* ── PRICING ── */}
       <section id="pricing">
-        <div className="eyebrow reveal">Pricing</div>
-        <h2 className="reveal reveal-delay-1" style={{fontSize:'clamp(28px,4vw,40px)',fontWeight:900,letterSpacing:'-.02em',marginBottom:8}}>Less than a single ticket.</h2>
-        <p className="reveal reveal-delay-2" style={{color:'var(--sub)',fontSize:16,marginBottom:32}}>Start with a 3-day free trial. Cancel anytime — no nonsense.</p>
-        <div className="pricing-toggle reveal reveal-delay-2">
-          <button className={`toggle-btn ${planType==='single'?'active':''}`} onClick={()=>setPlanType('single')}>Single state</button>
-          <button className={`toggle-btn ${planType==='multi'?'active':''}`} onClick={()=>setPlanType('multi')}>Multi-state</button>
-        </div>
-        <div className="pricing-cards">
-          {PLANS[planType].map((plan,i) => (
-            <div key={plan.period} className={`pricing-card reveal reveal-delay-${i+1} ${plan.featured?'featured':''}`}>
-              {plan.badge && <div className="pricing-badge">{plan.badge}</div>}
-              <div className="pricing-period">{plan.period}</div>
-              <div className="pricing-price">{plan.price}<span>{plan.unit}</span></div>
-              <div className="pricing-trial">✦ 3 days free</div>
-              <div className="pricing-divider" />
-              <div className="pricing-features">
-                {plan.features.map(f => (
-                  <div key={f} className="pricing-feature"><div className="check">✓</div>{f}</div>
-                ))}
-              </div>
-              <button className={`pricing-cta ${plan.featured?'dark':'light'}`}>Start free trial</button>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+          
+          <div className="eyebrow reveal">Pricing</div>
+          
+          <div className="pricing-header-row reveal reveal-delay-1" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '8px' }}>
+            <h2 style={{fontSize:'clamp(28px,4vw,40px)',fontWeight:900,letterSpacing:'-.02em', margin: 0}}>Less than a single ticket.</h2>
+            
+            <div className="pricing-toggle">
+              <button className={`toggle-btn ${planType==='single'?'active':''}`} onClick={()=>setPlanType('single')}>Single state</button>
+              <button className={`toggle-btn ${planType==='multi'?'active':''}`} onClick={()=>setPlanType('multi')}>Multi-state</button>
             </div>
-          ))}
+          </div>
+
+          <p className="reveal reveal-delay-2" style={{color:'var(--sub)',fontSize:16,marginBottom:64}}>Start with a 3-day free trial. Cancel anytime — no nonsense.</p>
+          
+          <div className="pricing-cards">
+            {PLANS[planType].map((plan,i) => (
+              <div key={plan.period} className={`pricing-card reveal reveal-delay-${i+1} ${plan.featured?'featured':''}`}>
+                {plan.badge && <div className="pricing-badge">{plan.badge}</div>}
+                <div className="pricing-period">{plan.period}</div>
+                <div className="pricing-price">{plan.price}<span>{plan.unit}</span></div>
+                <div className="pricing-trial">✦ 3 days free</div>
+                <div className="pricing-divider" />
+                <div className="pricing-features">
+                  {plan.features.map(f => (
+                    <div key={f} className="pricing-feature"><div className="check">✓</div>{f}</div>
+                  ))}
+                </div>
+                <button className={`pricing-cta ${plan.featured?'dark':'light'}`}>Start free trial</button>
+              </div>
+            ))}
+          </div>
+          
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS (COMMUNITY) ── */}
+      <section id="testimonials" style={{ paddingTop: 0 }}>
+        <div className="eyebrow reveal">Community</div>
+        <h2 className="reveal reveal-delay-1" style={{fontSize:'clamp(28px,4vw,40px)',fontWeight:900,letterSpacing:'-.02em',marginBottom:40}}>What our users say</h2>
+        <div className="reveal reveal-delay-2">
+            <TestimonialCarousel />
         </div>
       </section>
 
@@ -389,7 +442,7 @@ function App() {
             <p className="cta-sub">3 days free. No ads, no upsells.<br/>Cancel anytime from your settings.</p>
           </div>
           <div className="cta-right">
-            <a href="#" className="appstore-btn">
+            <a href="https://apps.apple.com/us/app/scratchranker/id6753612311" className="appstore-btn" target="_blank" rel="noopener noreferrer">
                 <AppleIcon />
                 <div className="appstore-text">
                     <small>Download on the</small>
